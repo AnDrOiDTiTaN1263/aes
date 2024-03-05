@@ -36,6 +36,29 @@ pub fn vec_sub_bytes(mut input_vec:Vec<u8>){
     }
 }   
 
+fn shift(r:usize)->usize{
+    if r == 1{
+        return 1;
+    }if r == 2{
+        return 2;
+    }if r == 3{
+        return 3;
+    }
+    0
+}
+
+pub fn shift_rows(state_array:Vec<Vec<u8>>)->Vec<Vec<u8>>{
+    let mut temp = vec![vec![0u8;4];4];
+    println!("{state_array:02x?}");
+    for r in 0..4{
+        for c in 0..4{
+            temp[r][c] = state_array[r][((c+shift(r)).rem_euclid(4))];
+        }
+    }
+    temp
+}
+
+
 
 pub fn convert_vec_to_state_array(input_vec:Vec<u8>)->Vec<Vec<u8>>{
     if input_vec.len() != 16{
@@ -44,7 +67,7 @@ pub fn convert_vec_to_state_array(input_vec:Vec<u8>)->Vec<Vec<u8>>{
     let mut state_array:Vec<Vec<u8>> = vec![vec![0u8;4];4];
     for c in 0..4{
         for r in 0..4{
-            state_array[c][r] = input_vec[r+4*c];
+            state_array[r][c] = input_vec[r+4*c];
         }
     }
     state_array
