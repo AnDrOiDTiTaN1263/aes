@@ -206,3 +206,19 @@ pub fn decrypt(input_key:Vec<u8>,  input_vec:Vec<u8>)->Vec<u8>{
 
 
 
+
+pub fn encrypt(mut input_vec:Vec<u8>, input_key:Vec<u8>)->Vec<u8>{
+    let keys = key_expansion(input_key);
+    let mut state_array = convert_vec_to_state_array(input_vec);
+    state_array = add_round_key(state_array, keys[0..4].to_vec());
+    for round in 1..NR{
+        state_array = sub_bytes(state_array);
+        state_array = shift_rows(state_array);
+        state_array = mix_columns(state_array);
+        state_array = add_round_key(state_array, keys[round*4..round*4+4].to_vec());
+    }
+    state_array = sub_bytes(state_array);
+    state_array = shift_rows(state_array);
+    state_array = add_round_key(state_array, keys[NR*NB..(NR+1)*NB].to_vec());
+    convert_state_array_to_vec(state_array)
+}
