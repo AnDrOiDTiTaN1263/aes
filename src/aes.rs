@@ -26,16 +26,25 @@
 use crate::{constants::*, helper::{calc_mix_col_val, calc_rcon, left_shift_bytes, xor_vec}};
 
 ///single byte substitution by using the lookup table called S-BOX in constants.rs
-pub fn sub_byte(byte:u8)->u8{
+pub fn s_byte(byte:u8)->u8{
     S_BOX[byte as usize]
 }
 
 pub fn vec_sub_bytes(mut input_vec:Vec<u8>)->Vec<u8>{
     for x in 0..input_vec.len(){
-        input_vec[x] = sub_byte(input_vec[x]);
+        input_vec[x] = s_byte(input_vec[x]);
     }
     input_vec
 }   
+
+pub fn sub_bytes(mut state_array:Vec<Vec<u8>>)->Vec<Vec<u8>>{
+    for r in 0..4{
+        for c in 0..4{
+            state_array[r][c] = s_byte(state_array[r][c]);
+        }
+    }
+    state_array
+}
 
 fn shift(r:usize)->usize{
     if r == 1{
@@ -50,7 +59,6 @@ fn shift(r:usize)->usize{
 
 pub fn shift_rows(state_array:Vec<Vec<u8>>)->Vec<Vec<u8>>{
     let mut temp = vec![vec![0u8;4];4];
-    println!("{state_array:02x?}");
     for r in 0..4{
         for c in 0..4{
             temp[r][c] = state_array[r][((c+shift(r)).rem_euclid(4))];
@@ -59,6 +67,23 @@ pub fn shift_rows(state_array:Vec<Vec<u8>>)->Vec<Vec<u8>>{
     temp
 }
 
+pub fn add_round_key(mut state_array:Vec<Vec<u8>>, keys:Vec<Vec<u8>>)->Vec<Vec<u8>>{
+    /*
+    [5f, 57, f7, 1d]
+    [72, f5, be, b9]
+    [64, bc, 3b, f9]
+    [15, 92, 29, 1a]
+ */
+    for c in 0..4{
+        let col = [state_array[0][c], state_array[1][c], state_array[2][c], state_array[3][c]];
+        let vals = xor_vec(col.to_vec(), keys[c].clone());
+        for x in 0..4{
+            state_array[x][c] = vals[x];
+        }
+        let col = [state_array[0][c], state_array[1][c], state_array[2][c], state_array[3][c]];
+    }
+    state_array
+}
 
 pub fn convert_vec_to_state_array(input_vec:Vec<u8>)->Vec<Vec<u8>>{
     if input_vec.len() != 16{
@@ -74,7 +99,17 @@ pub fn convert_vec_to_state_array(input_vec:Vec<u8>)->Vec<Vec<u8>>{
 
 }
 
-pub fn key_expansion(input_key:Vec<u8>){
+pub fn convert_state_array_to_vec(state_array:Vec<Vec<u8>>)->Vec<u8>{
+    let mut ret: Vec<u8> = vec![0u8;16];
+    for r in 0..4{
+        for c in 0..4{
+            ret[r+4*c] = state_array[r][c];
+        }
+    }
+    ret
+}
+
+pub fn key_expansion(input_key:Vec<u8>)->Vec<Vec<u8>>{
     /*
         With AES256 we require 14 + 1 round keys, 
      */
@@ -97,7 +132,7 @@ pub fn key_expansion(input_key:Vec<u8>){
         ret[i] = xor_vec(ret[i-NK].clone(), temp.clone());
         i+=1;
     }
-    println!("{ret:02x?}");
+    ret
 
 }
 
