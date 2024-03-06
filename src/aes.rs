@@ -85,29 +85,6 @@ pub fn add_round_key(mut state_array:Vec<Vec<u8>>, keys:Vec<Vec<u8>>)->Vec<Vec<u
     state_array
 }
 
-pub fn convert_vec_to_state_array(input_vec:Vec<u8>)->Vec<Vec<u8>>{
-    if input_vec.len() != 16{
-        return vec![];
-    }
-    let mut state_array:Vec<Vec<u8>> = vec![vec![0u8;4];4];
-    for c in 0..4{
-        for r in 0..4{
-            state_array[r][c] = input_vec[r+4*c];
-        }
-    }
-    state_array
-
-}
-
-pub fn convert_state_array_to_vec(state_array:Vec<Vec<u8>>)->Vec<u8>{
-    let mut ret: Vec<u8> = vec![0u8;16];
-    for r in 0..4{
-        for c in 0..4{
-            ret[r+4*c] = state_array[r][c];
-        }
-    }
-    ret
-}
 
 pub fn key_expansion(input_key:Vec<u8>)->Vec<Vec<u8>>{
     /*
