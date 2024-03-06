@@ -1,7 +1,8 @@
-use crate::constants::{G_MUL_2, G_MUL_3, MIX_COL_MATRIX};
+use crate::constants::{G_MUL_2, G_MUL_3, MIX_COL_MATRIX, RCON_VALUES};
 
 pub fn decode_hex_string(s: &str) -> Vec<u8> {
     let mut ret:Vec<u8> = vec![];
+    let s:String = s.chars().filter(|c| !c.is_whitespace()).collect();
     if s.len() % 2 != 0{
         return ret;
     }
@@ -54,18 +55,29 @@ pub fn xor_vec(left:Vec<u8>, right:Vec<u8>)->Vec<u8>{
         for _ in 0..right.len()-left.len(){
             ret.push(right.remove(0));
         }
-        for x in 0..left.len(){
-            ret.push(left[x]^right[x]);
-        }
     }if right.len() < left.len(){
         for _ in 0..left.len()-right.len(){
             ret.push(left.remove(0));
         }
-        for x in 0..left.len(){
-            ret.push(left[x]^right[x]);
-        }
+        
     }
-    
-    
+    for x in 0..left.len(){
+        ret.push(left[x]^right[x]);
+    }
+    ret
+}
+
+pub fn calc_rcon(index:usize)->[u8;4]{
+    [RCON_VALUES[index],0u8,0u8,0u8]
+}
+
+pub fn left_shift_bytes(input_vec:Vec<u8>, times:usize)->Vec<u8>{
+    if times >= input_vec.len(){
+        println!("didn't shift anything because \'times\' was larger than the length of the input vector");
+        return input_vec;
+    }
+    let right_seg = input_vec[times..input_vec.len()].to_vec();
+    let mut ret = right_seg;
+    ret.append(&mut input_vec[0..times].to_vec());
     ret
 }
