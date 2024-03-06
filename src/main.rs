@@ -1,4 +1,4 @@
-use aes::{convert_vec_to_state_array, mix_columns};
+use aes::{convert_vec_to_state_array, key_expansion, mix_columns};
 
 use crate::helper::{decode_hex_string, encode_hex_string};
 #[allow(dead_code, unused)]
@@ -7,11 +7,9 @@ mod constants;
 mod helper;
 fn main(){
     
-    let test_vec: Vec<u8> = decode_hex_string("84e1fd6b1a5c946fdf4938977cfbac23");
-    // println!("{:02x?}",test_vec);
-    let state_array = convert_vec_to_state_array(test_vec);
-    let mix_col_str = encode_hex_string(mix_columns(state_array));
-    assert_eq!(mix_col_str, "bd2a395d2b6ac438d192443e615da195".to_string());    
+    let test_vec: Vec<u8> = decode_hex_string("60 3d eb 10 15 ca 71 be 2b 73 ae f0 85 7d 77 81
+    1f 35 2c 07 3b 61 08 d7 2d 98 10 a3 09 14 df f4");
+    key_expansion(test_vec);
 }
 
 
