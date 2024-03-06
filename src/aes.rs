@@ -23,17 +23,18 @@
             inverse mix columns
 */
 
-use crate::{constants::*, helper::calc_mix_col_val};
+use crate::{constants::*, helper::{calc_mix_col_val, calc_rcon, left_shift_bytes, xor_vec}};
 
 ///single byte substitution by using the lookup table called S-BOX in constants.rs
 pub fn sub_byte(byte:u8)->u8{
     S_BOX[byte as usize]
 }
 
-pub fn vec_sub_bytes(mut input_vec:Vec<u8>){
+pub fn vec_sub_bytes(mut input_vec:Vec<u8>)->Vec<u8>{
     for x in 0..input_vec.len(){
         input_vec[x] = sub_byte(input_vec[x]);
     }
+    input_vec
 }   
 
 fn shift(r:usize)->usize{
@@ -73,9 +74,33 @@ pub fn convert_vec_to_state_array(input_vec:Vec<u8>)->Vec<Vec<u8>>{
 
 }
 
-fn key_expansion(){
+pub fn key_expansion(input_key:Vec<u8>){
+    /*
+        With AES256 we require 14 + 1 round keys, 
+     */
+    let mut i = 0;
+    let mut ret:Vec<Vec<u8>> = vec![vec![0u8;4];60];
+    while i <NK{
+        ret[i] = input_key[i*4..i*4+4].to_vec();
+        i+=1;
+    }
+    i = NK;
+    while i< NB * (NR+1){
+        let mut temp = ret[i-1].to_vec();
+        if i.rem_euclid(NK) == 0{
+            temp = xor_vec(
+                    vec_sub_bytes(left_shift_bytes(temp, 1)), calc_rcon(i/NK).to_vec());
+        }
+        else if NK > 6 && i.rem_euclid(NK) == 4{
+            temp = vec_sub_bytes(temp);
+        }
+        ret[i] = xor_vec(ret[i-NK].clone(), temp.clone());
+        i+=1;
+    }
+    println!("{ret:02x?}");
 
 }
+
 pub fn mix_columns(mut state_array:Vec<Vec<u8>>)->Vec<Vec<u8>>{
     /*
         mix columns matrix:
