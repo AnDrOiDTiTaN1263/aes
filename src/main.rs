@@ -1,7 +1,5 @@
-use aes::{add_round_key, convert_vec_to_state_array, key_expansion, mix_columns};
+use crate::{aes::*, helper::*};
 
-use crate::{aes::{convert_state_array_to_vec, shift_rows, sub_bytes, vec_sub_bytes}, helper::{decode_hex_string, encode_hex_string}};
-#[allow(dead_code, unused)]
 mod aes;
 mod constants;
 mod helper;
