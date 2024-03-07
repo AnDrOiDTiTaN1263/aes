@@ -20,6 +20,7 @@
         
 */
 
+
 use crate::{constants::*, helper::*};
 use crate::{constants::*, helper::*};
 
@@ -188,11 +189,14 @@ pub fn decrypt(input_key:Vec<u8>,  input_vec:Vec<u8>)->Vec<u8>{
     let mut state_array = convert_vec_to_state_array(input_vec);
     let keys = key_expansion(input_key);
     state_array = add_round_key(state_array, keys[NR*NB..(NR+1)*NB].to_vec());
-    for round in NR..0{
+    let mut round = 13;
+    while round > 0{
         state_array = inverse_shift_rows(state_array);
         state_array = inverse_sub_bytes(state_array);
         state_array = add_round_key(state_array, keys[round*NB..(round+1)*NB].to_vec());
         state_array = inverse_mix_columns(state_array);
+
+        round-=1;
     }
     state_array = inverse_shift_rows(state_array);
     state_array = inverse_sub_bytes(state_array);
