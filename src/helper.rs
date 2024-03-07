@@ -61,7 +61,7 @@ pub fn inv_calc_mix_col_val(col:[u8;4], matrix_col_index:usize)->Option<u8>{
         }
     }
 
-    None
+    Some(ret)
 }
 
 
