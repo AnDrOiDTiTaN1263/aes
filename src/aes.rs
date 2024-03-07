@@ -17,18 +17,16 @@
                 -rijndael substitution box
             shift rows
             mix columns
-        decrypt mode:
-            inverse sub bytes
-            inverse shift rows
-            inverse mix columns
+        
 */
 
-use crate::{constants::*, helper::{calc_mix_col_val, calc_rcon, left_shift_bytes, xor_vec}};
+use crate::{constants::*, helper::*};
 
 ///single byte substitution by using the lookup table called S-BOX in constants.rs
 pub fn s_byte(byte:u8)->u8{
     S_BOX[byte as usize]
 }
+
 
 pub fn vec_sub_bytes(mut input_vec:Vec<u8>)->Vec<u8>{
     for x in 0..input_vec.len(){
@@ -46,22 +44,12 @@ pub fn sub_bytes(mut state_array:Vec<Vec<u8>>)->Vec<Vec<u8>>{
     state_array
 }
 
-fn shift(r:usize)->usize{
-    if r == 1{
-        return 1;
-    }if r == 2{
-        return 2;
-    }if r == 3{
-        return 3;
-    }
-    0
-}
 
 pub fn shift_rows(state_array:Vec<Vec<u8>>)->Vec<Vec<u8>>{
     let mut temp = vec![vec![0u8;4];4];
     for r in 0..4{
         for c in 0..4{
-            temp[r][c] = state_array[r][((c+shift(r)).rem_euclid(4))];
+            temp[r][c] = state_array[r][(c+r).rem_euclid(4)];
         }
     }
     temp
@@ -134,3 +122,67 @@ pub fn mix_columns(mut state_array:Vec<Vec<u8>>)->Vec<Vec<u8>>{
     }
     state_array
 }
+
+/*
+    inverse cipher functions below
+        decrypt mode:
+            inverse sub bytes
+            inverse shift rows
+            inverse mix columns
+*/
+
+pub fn inv_s_byte(byte:u8)->u8{
+    INV_S_BOX[byte as usize]
+}
+
+pub fn inverse_sub_bytes(mut state_array:Vec<Vec<u8>>)->Vec<Vec<u8>>{
+    for r in 0..4{
+        state_array[r][0] = inv_s_byte(state_array[r][0]);
+        state_array[r][1] = inv_s_byte(state_array[r][1]);
+        state_array[r][2] = inv_s_byte(state_array[r][2]);
+        state_array[r][3] = inv_s_byte(state_array[r][3]);
+    }
+    state_array
+}
+
+pub fn inverse_shift_rows(state_array:Vec<Vec<u8>>)->Vec<Vec<u8>>{
+    let mut temp = vec![vec![0u8;4];4];
+    for r in 0..4{
+        for c in 0..4{
+            temp[r][c] = state_array[r][(c as i8 -r as i8).rem_euclid(4) as usize];
+        }
+    
+    }
+    temp
+}
+
+pub fn inverse_mix_columns(mut state_array:Vec<Vec<u8>>)->Vec<Vec<u8>>{
+    for c in 0..4{
+        let col = [state_array[0][c],state_array[1][c],state_array[2][c],state_array[3][c]];
+        state_array[0][c] = inv_calc_mix_col_val(col.clone(), 0).unwrap();
+        state_array[1][c] = inv_calc_mix_col_val(col.clone(), 1).unwrap();
+        state_array[2][c] = inv_calc_mix_col_val(col.clone(), 2).unwrap();
+        state_array[3][c] = inv_calc_mix_col_val(col.clone(), 3).unwrap();
+    }
+    
+    state_array
+}
+
+pub fn decrypt(input_key:Vec<u8>,  input_vec:Vec<u8>)->Vec<u8>{
+    let mut state_array = convert_vec_to_state_array(input_vec);
+    let keys = key_expansion(input_key);
+    state_array = add_round_key(state_array, keys[NR*NB..(NR+1)*NB].to_vec());
+    for round in NR..0{
+        state_array = inverse_shift_rows(state_array);
+        state_array = inverse_sub_bytes(state_array);
+        state_array = add_round_key(state_array, keys[round*NB..(round+1)*NB].to_vec());
+        state_array = inverse_mix_columns(state_array);
+    }
+    state_array = inverse_shift_rows(state_array);
+    state_array = inverse_sub_bytes(state_array);
+    state_array = add_round_key(state_array, keys[0..NB].to_vec());
+    convert_state_array_to_vec(state_array)
+}
+
+
+
