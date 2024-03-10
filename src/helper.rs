@@ -125,3 +125,21 @@ pub fn convert_state_array_to_vec(state_array:Vec<Vec<u8>>)->Vec<u8>{
     }
     ret
 }
+
+pub fn galois_multiplication(left:u8, right:u8)->u8{
+    let mut left = left.clone() as u16;
+    let mut right = right.clone() as u16;
+    let mut ret = 0u16;
+    while left != 0 && right != 0{
+        if right&1 == 1{
+            ret ^=left;
+        }
+        if (left & 0x80) == 1{
+            left = (left<<1)^0x11b;
+        }else{
+            left <<=1;
+        }
+        right >>=1;
+    }
+    ret as u8
+}
