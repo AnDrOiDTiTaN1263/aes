@@ -126,6 +126,7 @@ pub fn convert_state_array_to_vec(state_array:Vec<Vec<u8>>)->Vec<u8>{
     ret
 }
 
+#[allow(unused)]
 pub fn galois_multiplication(left:u8, right:u8)->u8{
     let mut left = left.clone() as u16;
     let mut right = right.clone() as u16;
