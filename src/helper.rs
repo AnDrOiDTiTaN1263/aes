@@ -14,12 +14,10 @@ pub fn decode_hex_string(s: &str) -> Vec<u8> {
 
 //used to display a state array as a long string of characters, NIST publication does it this way
 //this is to make it easier for us to follow along with them and test the code as we go
-pub fn encode_hex_string(input:Vec<Vec<u8>>)->String{
+pub fn encode_hex_string(input:Vec<u8>)->String{
     let mut string = "".to_string();
     for c in 0..input.len(){
-        for r in 0..input[c].len(){
-            string += &format!("{:02x}",input[r][c]);
-        }
+        string += &format!("{:02x?}", input[c]);
     }
     string
 }   
@@ -126,4 +124,22 @@ pub fn convert_state_array_to_vec(state_array:Vec<Vec<u8>>)->Vec<u8>{
         }
     }
     ret
+}
+
+pub fn galois_multiplication(left:u8, right:u8)->u8{
+    let mut left = left.clone() as u16;
+    let mut right = right.clone() as u16;
+    let mut ret = 0u16;
+    while left != 0 && right != 0{
+        if right&1 == 1{
+            ret ^=left;
+        }
+        if (left & 0x80) == 1{
+            left = (left<<1)^0x11b;
+        }else{
+            left <<=1;
+        }
+        right >>=1;
+    }
+    ret as u8
 }

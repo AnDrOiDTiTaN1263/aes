@@ -21,6 +21,7 @@
 */
 
 
+
 use crate::{constants::*, helper::*};
 
 ///single byte substitution by using the lookup table called S-BOX in constants.rs
@@ -74,7 +75,6 @@ pub fn add_round_key(mut state_array:Vec<Vec<u8>>, keys:Vec<Vec<u8>>)->Vec<Vec<u
     state_array
 }
 
-
 pub fn key_expansion(input_key:Vec<u8>)->Vec<Vec<u8>>{
     /*
         With AES256 we require 14 + 1 round keys, 
@@ -124,6 +124,24 @@ pub fn mix_columns(mut state_array:Vec<Vec<u8>>)->Vec<Vec<u8>>{
     state_array
 }
 
+
+pub fn encrypt(mut input_vec:Vec<u8>, input_key:Vec<u8>)->Vec<u8>{
+    let keys = key_expansion(input_key);
+    let mut state_array = convert_vec_to_state_array(input_vec);
+    state_array = add_round_key(state_array, keys[0..4].to_vec());
+    for round in 1..NR{
+        state_array = sub_bytes(state_array);
+        state_array = shift_rows(state_array);
+        state_array = mix_columns(state_array);
+        state_array = add_round_key(state_array, keys[round*4..round*4+4].to_vec());
+    }
+    state_array = sub_bytes(state_array);
+    state_array = shift_rows(state_array);
+    state_array = add_round_key(state_array, keys[NR*NB..(NR+1)*NB].to_vec());
+    convert_state_array_to_vec(state_array)
+}
+
+
 /*
     inverse cipher functions below
         decrypt mode:
@@ -169,7 +187,7 @@ pub fn inverse_mix_columns(mut state_array:Vec<Vec<u8>>)->Vec<Vec<u8>>{
     state_array
 }
 
-pub fn decrypt(input_key:Vec<u8>,  input_vec:Vec<u8>)->Vec<u8>{
+pub fn decrypt(  input_vec:Vec<u8>,input_key:Vec<u8>)->Vec<u8>{
     let mut state_array = convert_vec_to_state_array(input_vec);
     let keys = key_expansion(input_key);
     state_array = add_round_key(state_array, keys[NR*NB..(NR+1)*NB].to_vec());
